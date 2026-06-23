@@ -1,0 +1,10 @@
+{
+  "name": "booking-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "amqplib": "^2.0.1",
+    "express": "^5.2.1",
+    "redis": "^5.12.1"
+  }
+}

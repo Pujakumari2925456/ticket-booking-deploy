@@ -1,0 +1,12 @@
+{
+  "name": "gateway-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "http-proxy-middleware": "^2.0.6",
+    "rate-limit-redis": "^5.0.0",
+    "redis": "^5.12.1"
+  }
+}

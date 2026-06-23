@@ -1,0 +1,9 @@
+{
+  "name": "worker-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "amqplib": "^2.0.1",
+    "mongoose": "^8.0.0"
+  }
+}

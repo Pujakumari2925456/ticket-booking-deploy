@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TicketFlow — Microservices Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #7c3aed;
+    --accent2: #a855f7;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --blue: #3b82f6;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(124,58,237,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .header-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid;
+    font-family: var(--mono);
+  }
+
+  .badge-green { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: var(--green); }
+  .badge-purple { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.3); color: var(--accent2); }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+    margin-bottom: 20px;
+    background: var(--surface);
+  }
+
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 40%, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ARCHITECTURE FLOW */
+  .arch-section {
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    overflow-x: auto;
+  }
+
+  .arch-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+
+  .arch-node-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .arch-node-icon.active::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 12px;
+    border: 1px solid var(--accent);
+    animation: glow 2s infinite;
+  }
+
+  @keyframes glow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; box-shadow: 0 0 12px var(--accent); }
+  }
+
+  .arch-node-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .arch-node-sublabel {
+    font-size: 9px;
+    color: var(--accent2);
+    font-family: var(--mono);
+    text-align: center;
+  }
+
+  .arch-arrow {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--border);
+    font-size: 20px;
+    position: relative;
+    min-width: 30px;
+  }
+
+  .arch-arrow-animated {
+    height: 2px;
+    flex: 1;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    background-size: 200% 100%;
+    animation: flow 2s linear infinite;
+    border-radius: 2px;
+  }
+
+  @keyframes flow {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* MAIN GRID */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* STAT CARDS */
+  .stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .stat-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-family: var(--mono);
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* BOOKING FORM */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--mono);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(124,58,237,0.4);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  /* RESPONSE DISPLAY */
+  .response-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    transition: border-color 0.3s;
+  }
+
+  .response-box.success { border-color: rgba(16,185,129,0.4); color: var(--green); }
+  .response-box.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
+  .response-box.warning { border-color: rgba(245,158,11,0.4); color: var(--yellow); }
+  .response-box.idle { color: var(--muted); }
+
+  /* LOGS */
+  .log-container {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    height: 200px;
+    overflow-y: auto;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  .log-entry {
+    display: flex;
+    gap: 10px;
+    padding: 2px 0;
+  }
+
+  .log-time { color: var(--muted); flex-shrink: 0; }
+  .log-msg-success { color: var(--green); }
+  .log-msg-error { color: var(--red); }
+  .log-msg-info { color: var(--blue); }
+  .log-msg-warn { color: var(--yellow); }
+
+  /* INVENTORY BAR */
+  .inventory-bar-wrapper {
+    margin: 16px 0 8px;
+  }
+
+  .inventory-bar-track {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .inventory-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--green), #34d399);
+    transition: width 0.5s ease, background 0.5s ease;
+  }
+
+  .inventory-bar-fill.low { background: linear-gradient(90deg, var(--yellow), #fbbf24); }
+  .inventory-bar-fill.critical { background: linear-gradient(90deg, var(--red), #f87171); }
+
+  .inventory-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+
+  /* STRESS TEST */
+  .stress-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .stress-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* SYSTEM STATUS */
+  .service-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .service-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .service-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .service-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .service-dot.up { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .service-dot.down { background: var(--red); }
+  .service-dot.unknown { background: var(--muted); }
+
+  .service-name {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text);
+  }
+
+  .service-port {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .service-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: var(--mono);
+  }
+
+  /* PROGRESS RING */
+  .progress-ring {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 12px 0;
+  }
+
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-text {
+    font-family: var(--mono);
+  }
+  .ring-value {
+    font-size: 28px;
+    font-weight: 700;
+    fill: var(--text);
+  }
+  .ring-unit {
+    font-size: 12px;
+    fill: var(--muted);
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface2);
+    padding: 4px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  /* TOAST */
+  .toast-container {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--mono);
+    border: 1px solid;
+    backdrop-filter: blur(12px);
+    animation: slideIn 0.3s ease;
+    max-width: 320px;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .toast-success { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: var(--green); }
+  .toast-error { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: var(--red); }
+  .toast-warn { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: var(--yellow); }
+
+  /* SPINNER */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Mini chart bars */
+  .mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 40px;
+    margin-top: 12px;
+  }
+  .bar {
+    flex: 1;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    opacity: 0.6;
+    transition: height 0.3s ease;
+    min-height: 2px;
+  }
+  .bar:last-child { opacity: 1; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    main { padding: 20px 16px; }
+    .arch-flow { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🎟️</div>
+    TicketFlow
+  </div>
+  <div class="header-badges">
+    <div class="badge badge-green">
+      <span class="badge-dot"></span>
+      LIVE
+    </div>
+    <div class="badge badge-purple">
+      MICROSERVICES · EVENT-DRIVEN
+    </div>
+  </div>
+</header>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span>⚡</span>
+      System Design · Production Architecture
+    </div>
+    <h1>Flash Sale Ticket<br/>Booking at Scale</h1>
+    <p>Redis caching · RabbitMQ queuing · Async MongoDB persistence. Built to handle 10K concurrent users without breaking a sweat.</p>
+  </div>
+
+  <!-- ARCHITECTURE FLOW -->
+  <div class="arch-section">
+    <div class="section-label">// system architecture</div>
+    <div class="arch-flow">
+      <div class="arch-node">
+        <div class="arch-node-icon" style="background:rgba(59,130,246,0.1)">🌐</div>
+        <div class="arch-node-label">Client</div>
+        <div class="arch-node-sublabel">Browser</div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-animated"></div></div>
+      <div class="arch-node">
+        <div class="arch-node-icon active" style="background:rgba(124,58,237,0.1)">🔀</div>
+        <div class="arch-node-label">API Gateway</div>
+        <div class="arch-node-sublabel">:4000 · Rate Limit</div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-animated"></div></div>
+      <div class="arch-node">
+        <div class="arch-node-icon" style="background:rgba(16,185,129,0.1)">📦</div>
+        <div class="arch-node-label">Booking Svc</div>
+        <div class="arch-node-sublabel">:4001 · Redis Check</div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-animated"></div></div>
+      <div class="arch-node">
+        <div class="arch-node-icon" style="background:rgba(245,158,11,0.1)">⚡</div>
+        <div class="arch-node-label">Redis Cache</div>
+        <div class="arch-node-sublabel">:6379 · ~1ms</div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-animated"></div></div>
+      <div class="arch-node">
+        <div class="arch-node-icon" style="background:rgba(239,68,68,0.1)">🐇</div>
+        <div class="arch-node-label">RabbitMQ</div>
+        <div class="arch-node-sublabel">:5672 · Queue</div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-animated"></div></div>
+      <div class="arch-node">
+        <div class="arch-node-icon" style="background:rgba(16,185,129,0.1)">⚙️</div>
+        <div class="arch-node-label">Worker Svc</div>
+        <div class="arch-node-sublabel">Background</div>
+      </div>
+      <div class="arch-arrow"><div class="arch-arrow-animated"></div></div>
+      <div class="arch-node">
+        <div class="arch-node-icon" style="background:rgba(16,185,129,0.15)">🍃</div>
+        <div class="arch-node-label">MongoDB</div>
+        <div class="arch-node-sublabel">:27017 · Persist</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="grid-3" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:rgba(16,185,129,0.1)">🎫</div>
+          Tickets Remaining
+        </div>
+      </div>
+      <div class="stat-value" id="inventoryCount" style="color:var(--green)">—</div>
+      <div class="stat-label">of 100 total</div>
+      <div class="inventory-bar-wrapper">
+        <div class="inventory-bar-track">
+          <div class="inventory-bar-fill" id="inventoryBar" style="width:100%"></div>
+        </div>
+        <div class="inventory-labels">
+          <span>0</span>
+          <span id="inventoryPct">100%</span>
+          <span>100</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:rgba(124,58,237,0.1)">📊</div>
+          Bookings Made
+        </div>
+      </div>
+      <div class="stat-value" id="bookingCount" style="color:var(--accent2)">0</div>
+      <div class="stat-label">this session</div>
+      <div class="mini-chart" id="miniChart">
+        <div class="bar" style="height:5%"></div>
+        <div class="bar" style="height:5%"></div>
+        <div class="bar" style="height:5%"></div>
+        <div class="bar" style="height:5%"></div>
+        <div class="bar" style="height:5%"></div>
+        <div class="bar" style="height:5%"></div>
+        <div class="bar" style="height:5%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:rgba(239,68,68,0.1)">🚫</div>
+          Rate Limited
+        </div>
+      </div>
+      <div class="stat-value" id="rateLimitCount" style="color:var(--red)">0</div>
+      <div class="stat-label">requests blocked</div>
+      <div style="margin-top:16px;padding:8px 10px;background:var(--surface2);border-radius:6px;font-size:11px;font-family:var(--mono);color:var(--muted)">
+        Max 5 req / 60s per IP<br/>via Redis distributed store
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING + LOGS -->
+  <div class="grid-2" style="margin-bottom:20px">
+
+    <!-- BOOKING FORM -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:rgba(124,58,237,0.1)">🎯</div>
+          Book a Ticket
+        </div>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--muted)">POST /api/book</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">User ID</label>
+        <input class="form-input" id="userId" type="text" placeholder="user_123" value="user_demo"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Ticket ID</label>
+        <input class="form-input" id="ticketId" type="text" placeholder="ticket_456" value="ticket_A1"/>
+      </div>
+
+      <button class="btn btn-primary" id="bookBtn" onclick="bookTicket()">
+        <span id="bookBtnText">Book Ticket →</span>
+      </button>
+      <button class="btn btn-secondary" onclick="refreshInventory()">
+        ↻ Refresh Inventory
+      </button>
+
+      <div style="margin-top:16px">
+        <div class="form-label" style="margin-bottom:8px">RESPONSE</div>
+        <div class="response-box idle" id="responseBox">
+Waiting for request...
+
+Click "Book Ticket" to send a POST to:
+http://localhost/api/book
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY LOG -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:rgba(59,130,246,0.1)">📋</div>
+          Activity Log
+        </div>
+        <button onclick="clearLog()" style="font-size:11px;font-family:var(--mono);background:none;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:4px;cursor:pointer">clear</button>
+      </div>
+      <div class="log-container" id="activityLog">
+        <div class="log-entry">
+          <span class="log-time">00:00:00</span>
+          <span class="log-msg-info">TicketFlow dashboard initialized</span>
+        </div>
+        <div class="log-entry">
+          <span class="log-time">00:00:00</span>
+          <span class="log-msg-info">Fetching inventory from Redis...</span>
+        </div>
+      </div>
+
+      <!-- STRESS TEST -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="card-title" style="margin-bottom:12px">
+          <div class="card-icon" style="background:rgba(239,68,68,0.1);width:24px;height:24px;font-size:12px">💥</div>
+          Stress Test — Rate Limiter Demo
+        </div>
+        <div class="stress-controls">
+          <div class="stress-input-group">
+            <label class="form-label">Requests</label>
+            <input class="form-input" id="stressCount" type="number" value="6" min="1" max="20" style="font-size:13px;padding:8px 10px"/>
+          </div>
+          <div class="stress-input-group">
+            <label class="form-label">Delay (ms)</label>
+            <input class="form-input" id="stressDelay" type="number" value="200" min="0" max="2000" style="font-size:13px;padding:8px 10px"/>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="stressBtn" onclick="runStressTest()" style="background:linear-gradient(135deg,#dc2626,#ef4444)">
+          <span id="stressBtnText">🚀 Fire Requests</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYSTEM STATUS -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:rgba(16,185,129,0.1)">🖥️</div>
+          Service Health
+        </div>
+        <button onclick="checkHealth()" style="font-size:11px;font-family:var(--mono);background:none;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:4px;cursor:pointer">check</button>
+      </div>
+      <div class="service-list">
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-dot" id="dot-nginx"></div>
+            <div>
+              <div class="service-name">nginx (Load Balancer)</div>
+              <div class="service-port">:80 · reverse proxy</div>
+            </div>
+          </div>
+          <span class="service-tag" id="tag-nginx" style="background:rgba(100,116,139,0.1);color:var(--muted)">checking</span>
+        </div>
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-dot" id="dot-gateway"></div>
+            <div>
+              <div class="service-name">gateway-service</div>
+              <div class="service-port">:4000 · rate limiter</div>
+            </div>
+          </div>
+          <span class="service-tag" id="tag-gateway" style="background:rgba(100,116,139,0.1);color:var(--muted)">checking</span>
+        </div>
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-dot" id="dot-booking"></div>
+            <div>
+              <div class="service-name">booking-service</div>
+              <div class="service-port">:4001 · core logic</div>
+            </div>
+          </div>
+          <span class="service-tag" id="tag-booking" style="background:rgba(100,116,139,0.1);color:var(--muted)">checking</span>
+        </div>
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-dot" id="dot-redis"></div>
+            <div>
+              <div class="service-name">redis</div>
+              <div class="service-port">:6379 · cache + rate limit</div>
+            </div>
+          </div>
+          <span class="service-tag" id="tag-redis" style="background:rgba(100,116,139,0.1);color:var(--muted)">inferred</span>
+        </div>
+        <div class="service-row">
+          <div class="service-info">
+            <div class="service-dot" id="dot-rabbit"></div>
+            <div>
+              <div class="service-name">rabbitmq</div>
+              <div class="service-port">:15672 · management UI</div>
+            </div>
+          </div>
+          <span class="service-tag" id="tag-rabbit" style="background:rgba(100,116,139,0.1);color:var(--muted)">
+            <a href="http://localhost:15672" target="_blank" style="color:inherit;text-decoration:none">open UI ↗</a>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESIGN PRINCIPLES -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:rgba(245,158,11,0.1)">🧠</div>
+          Design Decisions
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="padding:12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--accent)">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--accent2);margin-bottom:4px">CACHE-ASIDE PATTERN</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Redis stores inventory in RAM. Reads take ~1ms vs ~20ms from disk. Prevents race conditions atomically via DECR.</div>
+        </div>
+        <div style="padding:12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--green)">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--green);margin-bottom:4px">EVENT-DRIVEN ASYNC</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">RabbitMQ absorbs 10K req/sec as a shock absorber. Returns 202 instantly. Worker persists at sustainable pace.</div>
+        </div>
+        <div style="padding:12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--yellow)">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--yellow);margin-bottom:4px">DISTRIBUTED RATE LIMITING</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Rate limits stored in Redis, not memory. Works across multiple gateway instances. Blocks bots at edge.</div>
+        </div>
+        <div style="padding:12px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--blue)">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--blue);margin-bottom:4px">EVENTUAL CONSISTENCY</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Redis is source of truth during sale. MongoDB catches up asynchronously. Dead letter queue handles failures.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+  const API = '';  // relative URLs, goes through nginx
+  let bookingCount = 0;
+  let rateLimitCount = 0;
+  let chartData = [0,0,0,0,0,0,0];
+  let startTime = Date.now();
+
+  function timeStr() {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    const m = Math.floor(s/60).toString().padStart(2,'0');
+    const sec = (s%60).toString().padStart(2,'0');
+    return `${m}:${sec}`;
+  }
+
+  function log(msg, type='info') {
+    const container = document.getElementById('activityLog');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span class="log-time">${timeStr()}</span><span class="log-msg-${type}">${msg}</span>`;
+    container.appendChild(entry);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function clearLog() {
+    document.getElementById('activityLog').innerHTML = '';
+    log('Log cleared', 'info');
+  }
+
+  function showToast(msg, type='success') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  function updateInventoryUI(count) {
+    const pct = Math.max(0, (count / 100) * 100);
+    document.getElementById('inventoryCount').textContent = count;
+    document.getElementById('inventoryPct').textContent = `${pct.toFixed(0)}%`;
+    const bar = document.getElementById('inventoryBar');
+    bar.style.width = `${pct}%`;
+    bar.className = 'inventory-bar-fill' + (pct <= 10 ? ' critical' : pct <= 30 ? ' low' : '');
+    const el = document.getElementById('inventoryCount');
+    el.style.color = pct <= 10 ? 'var(--red)' : pct <= 30 ? 'var(--yellow)' : 'var(--green)';
+  }
+
+  function updateChart() {
+    chartData.shift();
+    chartData.push(bookingCount);
+    const max = Math.max(...chartData, 1);
+    const bars = document.querySelectorAll('#miniChart .bar');
+    bars.forEach((b, i) => {
+      b.style.height = `${Math.max(5, (chartData[i]/max)*100)}%`;
+    });
+  }
+
+  async function refreshInventory() {
+    try {
+      const r = await fetch('/api/inventory');
+      if (r.ok) {
+        const data = await r.json();
+        updateInventoryUI(data.available);
+        log(`Inventory fetched: ${data.available} tickets remaining`, 'success');
+        setServiceUp('booking', 'up');
+        setServiceUp('gateway', 'up');
+      }
+    } catch(e) {
+      log(`Inventory fetch failed: ${e.message}`, 'error');
+    }
+  }
+
+  function setServiceUp(name, status) {
+    const dot = document.getElementById(`dot-${name}`);
+    const tag = document.getElementById(`tag-${name}`);
+    if (!dot) return;
+    dot.className = `service-dot ${status}`;
+    if (status === 'up') {
+      tag.style.background = 'rgba(16,185,129,0.1)';
+      tag.style.color = 'var(--green)';
+      tag.textContent = '● online';
+    } else {
+      tag.style.background = 'rgba(239,68,68,0.1)';
+      tag.style.color = 'var(--red)';
+      tag.textContent = '✕ offline';
+    }
+  }
+
+  async function bookTicket(silent=false) {
+    const userId = document.getElementById('userId').value || 'user_demo';
+    const ticketId = document.getElementById('ticketId').value || 'ticket_A1';
+    const btn = document.getElementById('bookBtn');
+    const btnText = document.getElementById('bookBtnText');
+    const box = document.getElementById('responseBox');
+
+    if (!silent) {
+      btn.disabled = true;
+      btnText.innerHTML = '<div class="spinner"></div> Sending...';
+    }
+
+    const t0 = performance.now();
+
+    try {
+      const r = await fetch('/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, ticketId })
+      });
+      const data = await r.json();
+      const ms = Math.round(performance.now() - t0);
+
+      if (r.status === 202) {
+        bookingCount++;
+        document.getElementById('bookingCount').textContent = bookingCount;
+        updateChart();
+        if (!silent) {
+          box.className = 'response-box success';
+          box.textContent = `HTTP 202 Accepted  [${ms}ms]\n\n${JSON.stringify(data, null, 2)}`;
+          showToast(`✅ Booked! Order ${data.orderId}`, 'success');
+        }
+        log(`✅ 202 Accepted · ${ms}ms · OrderID: ${data.orderId}`, 'success');
+        setServiceUp('redis', 'up');
+        // refresh inventory after booking
+        setTimeout(refreshInventory, 300);
+      } else if (r.status === 429) {
+        rateLimitCount++;
+        document.getElementById('rateLimitCount').textContent = rateLimitCount;
+        if (!silent) {
+          box.className = 'response-box warning';
+          box.textContent = `HTTP 429 Too Many Requests  [${ms}ms]\n\nRate limit hit!\nMax 5 requests per 60 seconds per IP.\nThis is the Redis distributed rate limiter working.\n\n${JSON.stringify(data, null, 2)}`;
+          showToast('⚠️ Rate limited! (429)', 'warn');
+        }
+        log(`⚠️ 429 Rate Limited · ${ms}ms`, 'warn');
+      } else if (r.status === 400) {
+        if (!silent) {
+          box.className = 'response-box error';
+          box.textContent = `HTTP 400 Bad Request  [${ms}ms]\n\n${JSON.stringify(data, null, 2)}`;
+          showToast('❌ ' + data.message, 'error');
+        }
+        log(`❌ 400 ${data.message} · ${ms}ms`, 'error');
+      }
+    } catch(e) {
+      if (!silent) {
+        box.className = 'response-box error';
+        box.textContent = `Network Error\n\nMake sure all services are running:\ndocker-compose up -d --build\n\nError: ${e.message}`;
+        showToast('❌ Cannot connect to API', 'error');
+      }
+      log(`❌ Network error: ${e.message}`, 'error');
+    }
+
+    if (!silent) {
+      btn.disabled = false;
+      btnText.textContent = 'Book Ticket →';
+    }
+  }
+
+  async function runStressTest() {
+    const count = parseInt(document.getElementById('stressCount').value) || 6;
+    const delay = parseInt(document.getElementById('stressDelay').value) || 200;
+    const btn = document.getElementById('stressBtn');
+    const btnText = document.getElementById('stressBtnText');
+    
+    btn.disabled = true;
+    btnText.innerHTML = '<div class="spinner"></div> Firing...';
+    log(`🚀 Stress test: firing ${count} requests with ${delay}ms delay`, 'warn');
+    showToast(`🔥 Firing ${count} requests...`, 'warn');
+
+    for (let i = 0; i < count; i++) {
+      log(`→ Request ${i+1}/${count} fired`, 'info');
+      bookTicket(true);
+      if (delay > 0) await new Promise(r => setTimeout(r, delay));
+    }
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btnText.textContent = '🚀 Fire Requests';
+      log(`Stress test complete. Check rate limit counter above.`, 'info');
+    }, count * delay + 500);
+  }
+
+  async function checkHealth() {
+    log('Checking service health...', 'info');
+    // Try inventory endpoint (goes through gateway → booking service)
+    try {
+      const r = await fetch('/api/inventory');
+      if (r.ok) {
+        setServiceUp('nginx', 'up');
+        setServiceUp('gateway', 'up');
+        setServiceUp('booking', 'up');
+        setServiceUp('redis', 'up');
+        log('✅ All reachable services online', 'success');
+        showToast('✅ Services online', 'success');
+      }
+    } catch(e) {
+      setServiceUp('nginx', 'down');
+      setServiceUp('gateway', 'down');
+      setServiceUp('booking', 'down');
+      log('❌ Services unreachable — is docker-compose running?', 'error');
+      showToast('❌ Services offline', 'error');
+    }
+  }
+
+  // Init
+  window.addEventListener('load', () => {
+    refreshInventory();
+    checkHealth();
+    // Auto-refresh inventory every 5s
+    setInterval(refreshInventory, 5000);
+  });
+</script>
+</body>
+</html>
