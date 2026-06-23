@@ -42,3 +42,15 @@ startWorker().catch(err => {
   console.error('Worker failed to start:', err);
   process.exit(1);
 });
+const http = require('http');
+
+// A dummy server to make Render's port scanner happy
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Worker is running smoothly!\n');
+});
+
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => {
+    console.log(`Dummy server listening on port ${PORT} to keep Render alive`);
+});
