@@ -1046,7 +1046,8 @@ http://localhost/api/book
 
   async function refreshInventory() {
     try {
-      const r = await fetch('/api/inventory');
+      const r = await fetch(`${API}/api/inventory`);
+      
       if (r.ok) {
         const data = await r.json();
         updateInventoryUI(data.available);
@@ -1090,7 +1091,7 @@ http://localhost/api/book
     const t0 = performance.now();
 
     try {
-      const r = await fetch('/api/book', {
+      const r = await fetch(`${API}/api/book`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, ticketId })
@@ -1171,7 +1172,7 @@ http://localhost/api/book
     log('Checking service health...', 'info');
     // Try inventory endpoint (goes through gateway → booking service)
     try {
-      const r = await fetch('/api/inventory');
+      const r = await fetch(`${API}/api/inventory`);
       if (r.ok) {
         setServiceUp('nginx', 'up');
         setServiceUp('gateway', 'up');
