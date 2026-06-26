@@ -7,8 +7,9 @@ const cors = require('cors');
 
 const app = express();
 
+// app.use(cors());
+// app.options('*', cors());
 app.use(cors());
-app.options('*', cors());
 
 const redisClient = createClient({ url: process.env.REDIS_URL });
 redisClient.connect().catch(console.error);
