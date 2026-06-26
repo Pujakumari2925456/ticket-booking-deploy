@@ -24,7 +24,8 @@ const apiLimiter = rateLimit({
   message: { error: "Too many requests. Please try again later." }
 });
 
-app.use('/api', apiLimiter);
+//app.use('/api', apiLimiter);
+app.use('/api/book', apiLimiter);  // Only rate limit bookings, not inventory checks
 
 const BOOKING_URL = process.env.BOOKING_URL || 'http://booking-service:4001';
 
